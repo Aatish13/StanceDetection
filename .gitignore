@@ -128,3 +128,4 @@ dmypy.json
 # Pyre type checker
 .pyre/
 Datasets/The Climate Change Twitter Dataset.csv.zip
+Datasets/Climate Change Twitter Dataset.csv
