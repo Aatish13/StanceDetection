@@ -28,23 +28,18 @@ def get_specific_tweet(tweet_id):
     global counter
     print("Analysing Tweet #:" + str(counter), end="\r")
     counter = counter + 1
-    for i,tweet in enumerate(sntwitter.TwitterTweetScraper(tweetId=tweet_id,mode=sntwitter.TwitterTweetScraperMode.SINGLE).get_items()):
-        if tweet.lang=='en':
-            return tweet.rawContent
-        else:
-            return "Error!!!***"
+    try:
+        for i,tweet in enumerate(sntwitter.TwitterTweetScraper(tweetId=tweet_id,mode=sntwitter.TwitterTweetScraperMode.SINGLE).get_items()):
+            if tweet.lang=='en':
+                return tweet.rawContent
+            else:
+                return "Error!!!***"
+    except:
+        return "Error!!!***"
 
 print("Reading CSV File")
 df = pd.read_csv(".\Datasets\Climate Change Twitter Dataset.csv")
-df = df[["id", "stance"]]
-
-# start = len(df)-50000
-# end = len(df)
-# start = len(df)-100000
-# end = len(df)-50000
-# start = len(df)-200000
-# end = len(df)-100000
-df = df[start:end]
+df = df[["id", "stance"]].tail(50000)
 
 print("Getting Tweets")
 df["Tweet"] = df["id"].apply(get_specific_tweet)
