@@ -13,6 +13,7 @@ from tqdm import tqdm
 # https://github.com/JustAnotherArchivist/snscrape/issues/634
 # https://github.com/JustAnotherArchivist/snscrape/issues/291
 # https://stackoverflow.com/questions/73994971/how-do-i-filter-english-tweets-only-in-snscrape
+# https://www.geeksforgeeks.org/delete-duplicates-in-a-pandas-dataframe-based-on-two-columns/
 
 # Note: Tried Twitter API, but found out there is application, which I applied for, 
 # but takes at least a week. When researching how to do it, this snscrape module
@@ -41,7 +42,7 @@ print("Reading CSV File")
 df = pd.read_csv(".\Datasets\Climate Change Twitter Dataset.csv")
 df = df[["id", "stance"]]#.tail(100000)
 
-start = len(df)-105000
+start = len(df)-125000
 end = len(df)-100000
 df = df[start:end]
 
@@ -51,4 +52,5 @@ df["Tweet"] = df["id"].apply(get_specific_tweet)
 print("Preparing Dataframe and Exporting {0} Results".format(len(df)))
 df["id"] = df["id"].astype("str")
 df = df[df["Tweet"] != "Error!!!***"]
-df.to_csv('Cleaned_Climate_Change_Tweets.csv', mode='a', index=False)
+df = df.dropna().drop_duplicates(subset="Tweet", keep = 'last').reset_index()
+df.to_csv('Cleaned_Climate_Change_Tweets.csv', mode='a', index=False, header=False)
