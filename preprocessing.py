@@ -1,6 +1,7 @@
 import pandas as pd
 import snscrape.modules.twitter as sntwitter
 from time import sleep
+from tqdm import tqdm
 
 # Citations:
 # https://github.com/JustAnotherArchivist/snscrape/issues/137
@@ -8,28 +9,48 @@ from time import sleep
 # https://medium.com/machine-learning-mastery/how-to-scrape-millions-of-tweets-using-snscraper-aa47cee400ec
 # https://towardsdatascience.com/learn-how-to-easily-hydrate-tweets-a0f393ed340e
 # https://betterprogramming.pub/how-to-scrape-tweets-with-snscrape-90124ed006af
+# https://cloud.google.com/vertex-ai/docs/text-data/sentiment-analysis/prepare-data
+# https://github.com/JustAnotherArchivist/snscrape/issues/634
+# https://github.com/JustAnotherArchivist/snscrape/issues/291
+# https://stackoverflow.com/questions/73994971/how-do-i-filter-english-tweets-only-in-snscrape
 
 # Note: Tried Twitter API, but found out there is application, which I applied for, 
 # but takes at least a week. When researching how to do it, this snscrape module
 # popped up claiming to be better than the API based on the articles as the 
 # API has limitations with number of tweets, so I used it.
 
-def getTweet(tweetID):
-    for tweet in sntwitter.TwitterTweetScraper(tweetId=str(tweetID)).get_items():
-        return tweet.rawContent 
-    sleep(5)
+# Database link:
+# https://www.kaggle.com/datasets/deffro/the-climate-change-twitter-dataset?resource=download
 
-def exportDF(df):
-    df["Tweet"] = df["id"].apply(getTweet)
-    sleep(1)
-    df.to_csv('Cleaned_Climate_Change_Twitter_Posts.csv', mode='a', index=False)
-    sleep(1)
+counter = 1
 
+def get_specific_tweet(tweet_id):
+    global counter
+    print("Analysing Tweet #:" + str(counter), end="\r")
+    counter = counter + 1
+    for i,tweet in enumerate(sntwitter.TwitterTweetScraper(tweetId=tweet_id,mode=sntwitter.TwitterTweetScraperMode.SINGLE).get_items()):
+        if tweet.lang=='en':
+            return tweet.rawContent
+        else:
+            return "Error!!!***"
+
+print("Reading CSV File")
 df = pd.read_csv(".\Datasets\Climate Change Twitter Dataset.csv")
-df = df[["id", "Tweet", "stance"]]
-t_num = 0
-for i in range(0, len(df), 100000):
-    df["Tweets"][t_num:i] = df["id"][t_num].apply(getTweet)
-    t_num = i
-    sleep(300)
+df = df[["id", "stance"]]
 
+# start = len(df)-50000
+# end = len(df)
+# start = len(df)-100000
+# end = len(df)-50000
+# start = len(df)-200000
+# end = len(df)-100000
+df = df[start:end]
+
+print("Getting Tweets")
+df["Tweet"] = df["id"].apply(get_specific_tweet)
+
+print("Preparing Dataframe and Exporting {0} Results".format(len(df)))
+df["id"] = df["id"].astype("str")
+df = df[df["Tweet"] != "Error!!!***"]
+df.to_csv('Cleaned_Climate_Change_Tweets.csv', mode='a', index=False)
+    
