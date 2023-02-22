@@ -39,10 +39,10 @@ def get_specific_tweet(tweet_id):
 
 print("Reading CSV File")
 df = pd.read_csv(".\Datasets\Climate Change Twitter Dataset.csv")
-df = df[["id", "stance"]]#.tail(50000)
+df = df[["id", "stance"]]#.tail(100000)
 
-start = len(df)-100000
-end = len(df)-50000
+start = len(df)-105000
+end = len(df)-100000
 df = df[start:end]
 
 print("Getting Tweets")
@@ -52,5 +52,3 @@ print("Preparing Dataframe and Exporting {0} Results".format(len(df)))
 df["id"] = df["id"].astype("str")
 df = df[df["Tweet"] != "Error!!!***"]
 df.to_csv('Cleaned_Climate_Change_Tweets.csv', mode='a', index=False)
-    
-# 59534
