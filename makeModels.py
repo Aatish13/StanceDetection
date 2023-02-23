@@ -12,8 +12,10 @@ def splitData(twitter_df):
     return train_test_split(x,y,random_state=0, test_size=0.20, shuffle=True)
 
 # Caleb's Model
+# https://towardsdatascience.com/transfer-learning-in-nlp-for-tweet-stance-classification-8ab014da8dde
 def transferLearning(x_train, x_test, y_train, y_test):
     pass
+
 
 # Main Code to call other functions
 path = "./Cleaned_Climate_Change_Tweets_Model.csv"
