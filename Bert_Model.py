@@ -11,6 +11,7 @@ import numpy as np
 
 # Caleb Panikulam
 
+# Runs the Transformer Bert from Tensoflow hub and trains the model to do stance detection
 def robert_model_tf(train_texts, test_texts, train_labels, test_labels):
     # Get the Bert Models
     bert_preprocess = hub.KerasLayer("https://tfhub.dev/tensorflow/bert_en_uncased_preprocess/3")
