@@ -8,10 +8,11 @@ from sklearn.metrics import f1_score
 import Bert_Model_Baseline
 import Bert_Model
 
+
 # Found out when doing transfer learning that the classes should be equal
 def balance_data(df):
-    df_b = df[df["stance"]=='believer']
-    df_d = df[df["stance"]=='denier']    
+    df_b = df[df["stance"] == "believer"]
+    df_d = df[df["stance"] == "denier"]
     df_balanced = pd.DataFrame()
     if len(df_b) > len(df_d):
         df_b_dwnsmpld = df_b.sample(df_d.shape[0])
@@ -23,10 +24,12 @@ def balance_data(df):
         return df
     return df_balanced
 
-# Based on some research, it looks like f1 is the best score for binary 
+
+# Based on some research, it looks like f1 is the best score for binary
 # classification
 def analyze_results(test_labels, prediction_labels):
     return f1_score(test_labels, prediction_labels, average="binary")
+
 
 # Main function call the other scripts
 def main():
@@ -42,7 +45,9 @@ def main():
     model_labels = df["stance_label"].to_list()
 
     # Split the train and test data, and use stratify to match the new balanced stances
-    train_texts, test_texts, train_labels, test_labels = train_test_split(model_texts,model_labels, stratify=model_labels, test_size=.2)
+    train_texts, test_texts, train_labels, test_labels = train_test_split(
+        model_texts, model_labels, stratify=model_labels, test_size=0.2
+    )
 
     # Runs Huggingface Piple Robert Model Transformer that has been trained on climate change tweets for stance detection
     prediction_labels = Bert_Model_Baseline.roberta_model_baseline(test_texts)
@@ -51,7 +56,6 @@ def main():
     # Runs the Transformer Bert from Tensoflow hub and trains the model to do stance detection
     prediction_labels = Bert_Model.robert_model_tf(train_texts, test_texts, train_labels, test_labels)
     score = analyze_results(test_labels, prediction_labels)
-
 
 
 main()
