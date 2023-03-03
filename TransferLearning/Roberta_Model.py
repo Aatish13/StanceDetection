@@ -21,11 +21,11 @@ from tensorflow.keras.layers import Input, Dense
 # Caleb Panikulam
 
 def balance_data(df):
-    # Balance Dataframe
     stance_count, stance_id = df.groupby("stance_map").count().reset_index(0).sort_values("stance").head(1)[["stance", "stance_map"]].values.tolist()[0]
-    df = df.head(1000)
+    
     ids = df["stance_map"].unique().tolist()
     ids.remove(stance_id)
+
     new_df = df[df["stance_map"]==stance_id]
     for id in ids:
         temp_df = df[df["stance_map"]==id].sample(stance_count)
@@ -34,22 +34,21 @@ def balance_data(df):
     return new_df
 
 def preprocess_data(md_split, file_name = "./Climate_Change_Tweets_Model.csv"):
-    # Import Data
     df = pd.read_csv(file_name)
-    df["stance_map"] = df["stance"].map({"believer": 2, "denier": 1, "neutral": 0})
+    df["stance_map"] = df["stance"].map({"neutral": 0, "denier": 1, "believer": 2})
 
     df = balance_data(df)
     
     #md_split = len(df) - 10
     model_tweets = df[0:md_split]["Tweet"].to_list()
-    #demo_tweets = df[md_split:]["Tweet"].to_list()
+    demo_tweets = df[md_split:]["Tweet"].to_list()
 
     # Keras One-Hot Encoding Equilavent
     model_labels = tf.keras.utils.to_categorical(df[0:md_split]["stance_map"])
-    #demo_labels = tf.keras.utils.to_categorical(df[md_split:]["stance_map"])
+    demo_labels = tf.keras.utils.to_categorical(df[md_split:]["stance_map"])
 
-    x_train, x_test, y_train, y_test = train_test_split(model_tweets, model_labels, test_size=.2)
-    return x_train, x_test, y_train, y_test
+    
+    return model_tweets, demo_tweets, model_labels, demo_labels
 
 def get_BertModel(model_name):
     # tokenizer = AutoTokenizer.from_pretrained("bert-base-cased")
@@ -75,7 +74,7 @@ def encode_data(tokenizer, data, max_length = 70):
             verbose = True)
 
 
-def create_model(tokenizer, bert, max_length = 70):
+def create_model(tokenizer, bert, model_tweets, model_labels, max_length = 70):
     tf.keras.backend.clear_session()
 
     device_type = '/CPU:0'
@@ -83,6 +82,7 @@ def create_model(tokenizer, bert, max_length = 70):
         device_type = '/GPU:0'
 
     # tokenizer, bert = get_BertModel("roberta-base")
+    x_train, x_test, y_train, y_test = train_test_split(model_tweets, model_labels, test_size=.2)
     x_train, x_test, y_train, y_test = preprocess_data()
     x_train_token = encode_data(tokenizer, x_train) 
     x_test_token = encode_data(tokenizer, x_test)
@@ -126,22 +126,17 @@ def create_model(tokenizer, bert, max_length = 70):
         )
     return model
 
-def analyze_model(tokenizer, md_split, model,df):
+def analyze_model(tokenizer, model, demo_tweets, demo_labels):
     
-    demo_tweets = df[md_split:]["Tweet"].to_list()
-    demo_labels = tf.keras.utils.to_categorical(df[md_split:]["stance_map"])
     demo_token = encode_data(tokenizer, demo_tweets)
     
     results = model.predict({'input_ids':demo_token['input_ids'],'attention_mask':demo_token['attention_mask']})
     # print(predicted_raw[0])
     
     y_predict = np.argmax(results, axis = 1)
-    y_actual = df[md_split:]["stance_map"]
+    y_actual = np.argmax(demo_labels, axis=1).tolist()
 
     print(classification_report(y_actual, y_predict))
-
-
-
 
 def predict_model(tokenizer, model, tweets):
     tweets_encoded = encode_data(tokenizer, tweets)
@@ -153,9 +148,16 @@ def predict_model(tokenizer, model, tweets):
 
 def test_funcs():
     print("Test")
+    
     md_split = 100
-    print(preprocess_data(), md_split)
+    tokenizer, bert = get_BertModel("roberta-base")
+    model_tweets, demo_tweets, model_labels, demo_labels = preprocess_data()
 
+    model = create_model(tokenizer, bert, model_tweets, model_labels)
+
+    analyze_model(tokenizer, model, demo_tweets, demo_labels)
+
+    predict_model(tokenizer, model, demo_tweets[5])
 
 if __name__=="__main__":
     test_funcs()
