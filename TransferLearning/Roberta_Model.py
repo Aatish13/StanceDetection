@@ -23,6 +23,7 @@ from tensorflow.keras.layers import Input, Dense
 def balance_data(df):
     # Balance Dataframe
     stance_count, stance_id = df.groupby("stance_map").count().reset_index(0).sort_values("stance").head(1)[["stance", "stance_map"]].values.tolist()[0]
+    df = df.head(1000)
     ids = df["stance_map"].unique().tolist()
     ids.remove(stance_id)
     new_df = df[df["stance_map"]==stance_id]
@@ -32,7 +33,7 @@ def balance_data(df):
     
     return new_df
 
-def preprocess_data(file_name = "./Climate_Change_Tweets_Model.csv", md_split):
+def preprocess_data(md_split, file_name = "./Climate_Change_Tweets_Model.csv"):
     # Import Data
     df = pd.read_csv(file_name)
     df["stance_map"] = df["stance"].map({"believer": 2, "denier": 1, "neutral": 0})
@@ -150,9 +151,11 @@ def predict_model(tokenizer, model, tweets):
     return np.argmax(results, axis = 1)
 
 
-
-
 def test_funcs():
+    print("Test")
+    md_split = 100
+    print(preprocess_data(), md_split)
 
 
-
+if __name__=="__main__":
+    test_funcs()
