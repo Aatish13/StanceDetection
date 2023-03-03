@@ -25,7 +25,6 @@ from tqdm import tqdm
 
 counter = 1
 
-
 def get_specific_tweet(tweet_id):
     global counter
     print("Analysing Tweet #:" + str(counter), end="\r")
@@ -41,7 +40,8 @@ def get_specific_tweet(tweet_id):
     except:
         return "Error!!!***"
 
-
+# Main Code
+# Note, got around 160,000 tweets & no need to run this code again
 print("Reading CSV File")
 df = pd.read_csv(".\Datasets\Climate Change Twitter Dataset.csv")
 df = df[["id", "stance"]]  # .tail(100000)
