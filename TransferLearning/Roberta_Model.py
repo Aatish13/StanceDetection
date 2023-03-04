@@ -1,5 +1,6 @@
 # Citation:
 # https://www.analyticsvidhya.com/blog/2021/12/multiclass-classification-using-transformers/
+# https://datascience.stackexchange.com/questions/92955/keras-earlystopping-callback-why-would-i-ever-set-restore-best-weights-false
 
 import numpy as np
 import pandas as pd
@@ -33,12 +34,11 @@ def balance_data(df):
     
     return new_df
 
-def preprocess_data(md_split, file_name = "./Climate_Change_Tweets_Model.csv"):
+def preprocess_data(md_split, file_name = "../Dataset/Climate_Change_Tweets.csv"):
     df = pd.read_csv(file_name)
     df["stance_map"] = df["stance"].map({"neutral": 0, "denier": 1, "believer": 2})
-
-    df = balance_data(df)
     
+    #df = balance_data(df)
     #md_split = len(df) - 10
     model_tweets = df[0:md_split]["Tweet"].to_list()
     demo_tweets = df[md_split:]["Tweet"].to_list()
@@ -46,8 +46,7 @@ def preprocess_data(md_split, file_name = "./Climate_Change_Tweets_Model.csv"):
     # Keras One-Hot Encoding Equilavent
     model_labels = tf.keras.utils.to_categorical(df[0:md_split]["stance_map"])
     demo_labels = tf.keras.utils.to_categorical(df[md_split:]["stance_map"])
-
-    
+  
     return model_tweets, demo_tweets, model_labels, demo_labels
 
 def get_BertModel(model_name):
@@ -83,7 +82,6 @@ def create_model(tokenizer, bert, model_tweets, model_labels, max_length = 70):
 
     # tokenizer, bert = get_BertModel("roberta-base")
     x_train, x_test, y_train, y_test = train_test_split(model_tweets, model_labels, test_size=.2)
-    x_train, x_test, y_train, y_test = preprocess_data()
     x_train_token = encode_data(tokenizer, x_train) 
     x_test_token = encode_data(tokenizer, x_test)
 
@@ -112,7 +110,7 @@ def create_model(tokenizer, bert, model_tweets, model_labels, max_length = 70):
             loss = loss, 
             metrics = metric)
         
-        callback = tf.keras.callbacks.EarlyStopping(monitor='loss', patience=3)
+        callback = tf.keras.callbacks.EarlyStopping(monitor='balanced_accuracy', patience=3, restore_best_weights=True)
 
         train_history = model.fit(
             x ={'input_ids':x_train_token['input_ids'],'attention_mask':x_train_token['attention_mask']} ,
@@ -151,7 +149,7 @@ def test_funcs():
     
     md_split = 100
     tokenizer, bert = get_BertModel("roberta-base")
-    model_tweets, demo_tweets, model_labels, demo_labels = preprocess_data()
+    model_tweets, demo_tweets, model_labels, demo_labels = preprocess_data(md_split)
 
     model = create_model(tokenizer, bert, model_tweets, model_labels)
 
