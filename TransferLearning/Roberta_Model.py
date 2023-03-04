@@ -1,15 +1,13 @@
 # Citation:
 # https://www.analyticsvidhya.com/blog/2021/12/multiclass-classification-using-transformers/
 # https://datascience.stackexchange.com/questions/92955/keras-earlystopping-callback-why-would-i-ever-set-restore-best-weights-false
+# https://stackoverflow.com/questions/63851453/typeerror-singleton-array-arraytrue-cannot-be-considered-a-valid-collection
 
 import numpy as np
 import pandas as pd
 from sklearn.model_selection import train_test_split
-import pandas as pd
-from sklearn.model_selection import train_test_split
-from transformers import DistilBertTokenizerFast, TFDistilBertForSequenceClassification, AutoTokenizer,TFBertModel, TFAutoModel, TFAutoModelForSequenceClassification
 from sklearn.metrics import classification_report
-
+from transformers import DistilBertTokenizerFast, TFDistilBertForSequenceClassification, AutoTokenizer,TFBertModel, TFAutoModel, TFAutoModelForSequenceClassification
 import tensorflow as tf
 from tensorflow.keras.optimizers import Adam
 from tensorflow.keras.callbacks import EarlyStopping
@@ -26,27 +24,25 @@ def balance_data(df):
     
     ids = df["stance_map"].unique().tolist()
     ids.remove(stance_id)
-
     new_df = df[df["stance_map"]==stance_id]
     for id in ids:
         temp_df = df[df["stance_map"]==id].sample(stance_count)
         new_df = pd.concat([new_df, temp_df])
-    
+
     return new_df
 
 def preprocess_data(md_split, file_name = "../Dataset/Climate_Change_Tweets.csv"):
     df = pd.read_csv(file_name)
     df["stance_map"] = df["stance"].map({"neutral": 0, "denier": 1, "believer": 2})
     
-    #df = balance_data(df)
-    #md_split = len(df) - 10
-    model_tweets = df[0:md_split]["Tweet"].to_list()
-    demo_tweets = df[md_split:]["Tweet"].to_list()
+    df = balance_data(df)
+
+    model_tweets, demo_tweets, model_labels, demo_labels = train_test_split(df["Tweet"].to_list(), df["stance_map"].to_list(), test_size=.2, stratify=df["stance_map"].to_list())
 
     # Keras One-Hot Encoding Equilavent
-    model_labels = tf.keras.utils.to_categorical(df[0:md_split]["stance_map"])
-    demo_labels = tf.keras.utils.to_categorical(df[md_split:]["stance_map"])
-  
+    model_labels = tf.keras.utils.to_categorical(model_labels)
+    demo_labels = tf.keras.utils.to_categorical(demo_labels)
+    
     return model_tweets, demo_tweets, model_labels, demo_labels
 
 def get_BertModel(model_name):
@@ -81,7 +77,7 @@ def create_model(tokenizer, bert, model_tweets, model_labels, max_length = 70):
         device_type = '/GPU:0'
 
     # tokenizer, bert = get_BertModel("roberta-base")
-    x_train, x_test, y_train, y_test = train_test_split(model_tweets, model_labels, test_size=.2)
+    x_train, x_test, y_train, y_test = train_test_split(model_tweets, model_labels, test_size=.2, stratify=True)
     x_train_token = encode_data(tokenizer, x_train) 
     x_test_token = encode_data(tokenizer, x_test)
 
