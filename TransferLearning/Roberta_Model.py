@@ -90,8 +90,8 @@ def create_model(tokenizer, bert, model_tweets, model_labels, max_length=70):
     device_type = "/CPU:0"
     if len(tf.config.list_physical_devices("GPU")) > 0:
         device_type = "/GPU:0"
-
-    x_train, x_test, y_train, y_test = train_test_split(model_tweets, model_labels, test_size=0.2, stratify=True)
+    print("Note: Using {0}".format(device_type))
+    x_train, x_test, y_train, y_test = train_test_split(model_tweets, model_labels, test_size=0.2, stratify=model_labels)
     x_train_token = encode_data(tokenizer, x_train)
     x_test_token = encode_data(tokenizer, x_test)
 
@@ -115,7 +115,7 @@ def create_model(tokenizer, bert, model_tweets, model_labels, max_length=70):
         # Compile the model
         model.compile(optimizer=optimizer, loss=loss, metrics=metric)
 
-        callback = tf.keras.callbacks.EarlyStopping(monitor="balanced_accuracy", patience=3, restore_best_weights=True)
+        callback = tf.keras.callbacks.EarlyStopping(monitor="balanced_accuracy", patience=2, restore_best_weights=True, min_delta=0.0001)
 
         train_history = model.fit(
             x={"input_ids": x_train_token["input_ids"], "attention_mask": x_train_token["attention_mask"]},
@@ -155,11 +155,15 @@ def test_funcs():
     tokenizer, bert = get_BertModel("roberta-base")
     model_tweets, demo_tweets, model_labels, demo_labels = preprocess_data(md_split)
 
+    print("Create_Model()")
     model = create_model(tokenizer, bert, model_tweets, model_labels)
 
+    print("Analyze_Model()")
     analyze_model(tokenizer, model, demo_tweets, demo_labels)
 
-    predict_model(tokenizer, model, demo_tweets[5])
+    print("Predict_Model()")
+    results = predict_model(tokenizer, model, demo_tweets[5])
+    print(results)
 
 
 if __name__ == "__main__":
