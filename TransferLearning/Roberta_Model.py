@@ -110,7 +110,7 @@ def create_model(tokenizer, bert, model_tweets, model_labels, max_length=70):
             learning_rate=5e-05, epsilon=1e-08, decay=0.01, clipnorm=1.0  # this learning rate is for bert model , taken from huggingface website
         )
         # Set loss and metrics
-        loss = CategoricalCrossentropy(from_logits=True)
+        loss = CategoricalCrossentropy()#from_logits=True)
         metric = (CategoricalAccuracy("balanced_accuracy"),)
         # Compile the model
         model.compile(optimizer=optimizer, loss=loss, metrics=metric)
@@ -122,7 +122,7 @@ def create_model(tokenizer, bert, model_tweets, model_labels, max_length=70):
             y=y_train,
             validation_data=({"input_ids": x_test_token["input_ids"], "attention_mask": x_test_token["attention_mask"]}, y_test),
             epochs=100,
-            batch_size=36,
+            batch_size=32,
             callbacks=[callback],
         )
     return model
@@ -162,7 +162,7 @@ def test_funcs():
     analyze_model(tokenizer, model, demo_tweets, demo_labels)
 
     print("Predict_Model()")
-    results = predict_model(tokenizer, model, demo_tweets[5])
+    results = predict_model(tokenizer, model, demo_tweets[1:5])
     print(results)
 
 
