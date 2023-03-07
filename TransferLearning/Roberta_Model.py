@@ -39,6 +39,10 @@ def balance_data(df):
         temp_df = df[df["stance_map"] == id].sample(stance_count)
         new_df = pd.concat([new_df, temp_df])
 
+    print("Balanced Database")
+    print(new_df.groupby("stance_map").count().reset_index(0).sort_values("stance").head(1)[["stance_map", "stance"]])
+    print("\n")
+
     return new_df
 
 
