@@ -2,11 +2,14 @@
 # https://www.analyticsvidhya.com/blog/2021/12/multiclass-classification-using-transformers/
 # https://datascience.stackexchange.com/questions/92955/keras-earlystopping-callback-why-would-i-ever-set-restore-best-weights-false
 # https://stackoverflow.com/questions/63851453/typeerror-singleton-array-arraytrue-cannot-be-considered-a-valid-collection
+# https://stackoverflow.com/questions/41908379/keras-plot-training-validation-and-test-set-accuracy
+# https://www.kdnuggets.com/2021/02/saving-loading-models-tensorflow.html
 
 import numpy as np
 import pandas as pd
 from sklearn.model_selection import train_test_split
 from sklearn.metrics import classification_report
+from matplotlib import pyplot as plt
 from transformers import (
     DistilBertTokenizerFast,
     TFDistilBertForSequenceClassification,
@@ -40,13 +43,13 @@ def balance_data(df):
         new_df = pd.concat([new_df, temp_df])
 
     print("Balanced Database")
-    print(new_df.groupby("stance_map").count().reset_index(0).sort_values("stance").head(1)[["stance_map", "stance"]])
+    print(new_df.groupby("stance_map").count().reset_index(0)[["stance"]])
     print("\n")
 
     return new_df
 
 
-def preprocess_data(md_split, file_name="../Dataset/Climate_Change_Tweets.csv"):
+def preprocess_data(md_split, file_name="../Dataset/Preprocessed_Data.csv"):
     df = pd.read_csv(file_name)
     df["stance_map"] = df["stance"].map({"neutral": 0, "denier": 1, "believer": 2})
 
@@ -88,7 +91,7 @@ def encode_data(tokenizer, data, max_length=70):
     )
 
 
-def create_model(tokenizer, bert, model_tweets, model_labels, max_length=70):
+def create_model(tokenizer, bert, model_tweets, model_labels, max_length=70, file = "BERT_Trained_Model.h5"):
     tf.keras.backend.clear_session()
 
     device_type = "/CPU:0"
@@ -129,10 +132,17 @@ def create_model(tokenizer, bert, model_tweets, model_labels, max_length=70):
             batch_size=32,
             callbacks=[callback],
         )
+    print("Evaluation of Model:\n{0}\n".format(model.evaluate(x_test, y_test, verbose=0)))
+    pd.DataFrame(train_history.history).plot(figsize=(8,5))
+    plt.show()
+    model.save(file)
+    print("Saved Model: {0}".format(file))
+
     return model
 
 
 def analyze_model(tokenizer, model, demo_tweets, demo_labels):
+    # model = tf.keras.models.load_model(file)
     demo_token = encode_data(tokenizer, demo_tweets)
 
     results = model.predict({"input_ids": demo_token["input_ids"], "attention_mask": demo_token["attention_mask"]})
@@ -144,7 +154,8 @@ def analyze_model(tokenizer, model, demo_tweets, demo_labels):
     print(classification_report(y_actual, y_predict))
 
 
-def predict_model(tokenizer, model, tweets):
+def predict_model(tokenizer, tweets, file = "BERT_Trained_Model.h5"):
+    model = tf.keras.models.load_model(file)
     tweets_encoded = encode_data(tokenizer, tweets)
 
     results = model.predict({"input_ids": tweets_encoded["input_ids"], "attention_mask": tweets_encoded["attention_mask"]})
@@ -166,7 +177,7 @@ def test_funcs():
     analyze_model(tokenizer, model, demo_tweets, demo_labels)
 
     print("Predict_Model()")
-    results = predict_model(tokenizer, model, demo_tweets[1:5])
+    results = predict_model(tokenizer, demo_tweets[1:5])
     print(results)
 
 
