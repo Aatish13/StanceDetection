@@ -1,5 +1,8 @@
 
 Datasets/The Climate Change Twitter Dataset.csv.zip
 Datasets/Climate Change Twitter Dataset.csv
+<<<<<<< Updated upstream
 .DS_Store
+=======
+>>>>>>> Stashed changes
 *.h5
