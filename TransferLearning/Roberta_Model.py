@@ -4,31 +4,20 @@
 # https://stackoverflow.com/questions/63851453/typeerror-singleton-array-arraytrue-cannot-be-considered-a-valid-collection
 # https://stackoverflow.com/questions/41908379/keras-plot-training-validation-and-test-set-accuracy
 # https://www.kdnuggets.com/2021/02/saving-loading-models-tensorflow.html
+# https://stackoverflow.com/questions/73557769/valueerror-unknown-layer-tfbertmodel-please-ensure-this-object-is-passed-to-t
+# https://stackoverflow.com/questions/73557769/valueerror-unknown-layer-tfbertmodel-please-ensure-this-object-is-passed-to-t
+# https://wandb.ai/ayush-thakur/dl-question-bank/reports/What-s-the-Optimal-Batch-Size-to-Train-a-Neural-Network---VmlldzoyMDkyNDU
+# https://datascience.stackexchange.com/questions/37186/early-stopping-on-validation-loss-or-on-accuracy
 
 import numpy as np
 import pandas as pd
 from sklearn.model_selection import train_test_split
 from sklearn.metrics import classification_report
 from matplotlib import pyplot as plt
-from transformers import (
-    DistilBertTokenizerFast,
-    TFDistilBertForSequenceClassification,
-    AutoTokenizer,
-    TFBertModel,
-    TFAutoModel,
-    TFAutoModelForSequenceClassification,
-)
+from transformers import AutoTokenizer, TFBertModel, TFAutoModel
 import tensorflow as tf
-from tensorflow.keras.optimizers import Adam
-from tensorflow.keras.callbacks import EarlyStopping
-from tensorflow.keras.initializers import TruncatedNormal
-from tensorflow.keras.losses import CategoricalCrossentropy
-from tensorflow.keras.metrics import CategoricalAccuracy
-from tensorflow.keras.utils import to_categorical
-from tensorflow.keras.layers import Input, Dense
 
 # Caleb Panikulam
-
 
 def balance_data(df):
     stance_count, stance_id = (
@@ -41,15 +30,17 @@ def balance_data(df):
     for id in ids:
         temp_df = df[df["stance_map"] == id].sample(stance_count)
         new_df = pd.concat([new_df, temp_df])
-
+    
+    print("Database")
+    print(df.groupby("stance_map").count().reset_index(0)[["stance"]])
+    print("\n")
     print("Balanced Database")
     print(new_df.groupby("stance_map").count().reset_index(0)[["stance"]])
     print("\n")
 
     return new_df
 
-
-def preprocess_data(md_split, file_name="../Dataset/Preprocessed_Data.csv"):
+def preprocess_data(file_name="../Dataset/Preprocessed_Data.csv"):
     df = pd.read_csv(file_name)
     df["stance_map"] = df["stance"].map({"neutral": 0, "denier": 1, "believer": 2})
 
@@ -65,16 +56,17 @@ def preprocess_data(md_split, file_name="../Dataset/Preprocessed_Data.csv"):
 
     return model_tweets, demo_tweets, model_labels, demo_labels
 
-
 def get_BertModel(model_name):
     # tokenizer = AutoTokenizer.from_pretrained("bert-base-cased")
     # bert = TFBertModel.from_pretrained("bert-base-cased")
 
-    tokenizer = AutoTokenizer.from_pretrained(model_name)
-    bert = TFAutoModel.from_pretrained(model_name)
+    tokenizer = AutoTokenizer.from_pretrained("bert-base-uncased")
+    bert = TFBertModel.from_pretrained("bert-base-uncased")
+
+    # tokenizer = AutoTokenizer.from_pretrained(model_name)
+    # bert = TFAutoModel.from_pretrained(model_name)
 
     return tokenizer, bert
-
 
 def encode_data(tokenizer, data, max_length=70):
     return tokenizer(
@@ -90,8 +82,7 @@ def encode_data(tokenizer, data, max_length=70):
         verbose=True,
     )
 
-
-def create_model(tokenizer, bert, model_tweets, model_labels, max_length=70, file = "BERT_Trained_Model.h5"):
+def create_model(tokenizer, bert, model_tweets, model_labels, max_length=70, file="./models/BERT_Trained_Model.h5"):
     tf.keras.backend.clear_session()
 
     device_type = "/CPU:0"
@@ -103,46 +94,57 @@ def create_model(tokenizer, bert, model_tweets, model_labels, max_length=70, fil
     x_test_token = encode_data(tokenizer, x_test)
 
     with tf.device(device_type):
-        input_ids = Input(shape=(max_length,), dtype=tf.int32, name="input_ids")
-        input_mask = Input(shape=(max_length,), dtype=tf.int32, name="attention_mask")
+        input_ids = tf.keras.layers.Input(shape=(max_length,), dtype=tf.int32, name="input_ids")
+        input_mask = tf.keras.layers.Input(shape=(max_length,), dtype=tf.int32, name="attention_mask")
         embeddings = bert(input_ids, attention_mask=input_mask)[0]
         out = tf.keras.layers.GlobalMaxPool1D()(embeddings)
-        out = Dense(128, activation="relu")(out)
+        out = tf.keras.layers.Dense(128, activation="relu")(out)
         out = tf.keras.layers.Dropout(0.1)(out)
-        out = Dense(32, activation="relu")(out)
-        y = Dense(3, activation="sigmoid")(out)
+        out = tf.keras.layers.Dense(32, activation="relu")(out)
+        y = tf.keras.layers.Dense(3, activation="sigmoid")(out)
         model = tf.keras.Model(inputs=[input_ids, input_mask], outputs=y)
         model.layers[2].trainable = True
-        optimizer = Adam(
-            learning_rate=5e-05, epsilon=1e-08, decay=0.01, clipnorm=1.0  # this learning rate is for bert model , taken from huggingface website
+        optimizer = tf.keras.optimizers.Adam(
+            learning_rate=5e-05,
+            epsilon=1e-08,
+            decay=0.01,
+            clipnorm=1.0,  # this learning rate is for bert model , taken from huggingface website
         )
         # Set loss and metrics
-        loss = CategoricalCrossentropy()#from_logits=True)
-        metric = (CategoricalAccuracy("balanced_accuracy"),)
+        loss = tf.keras.losses.CategoricalCrossentropy()  # from_logits=True)
+        metric = tf.keras.metrics.CategoricalAccuracy("balanced_accuracy")
         # Compile the model
         model.compile(optimizer=optimizer, loss=loss, metrics=metric)
 
-        callback = tf.keras.callbacks.EarlyStopping(monitor="balanced_accuracy", patience=2, restore_best_weights=True, min_delta=0.0001)
+        callback = tf.keras.callbacks.EarlyStopping(monitor="val_balanced_accuracy", patience=3, restore_best_weights=True)#, min_delta=0.0001)
 
         train_history = model.fit(
             x={"input_ids": x_train_token["input_ids"], "attention_mask": x_train_token["attention_mask"]},
             y=y_train,
-            validation_data=({"input_ids": x_test_token["input_ids"], "attention_mask": x_test_token["attention_mask"]}, y_test),
+            validation_data=(
+                {"input_ids": x_test_token["input_ids"], "attention_mask": x_test_token["attention_mask"]},
+                y_test,
+            ),
             epochs=100,
-            batch_size=32,
+            batch_size=16,
             callbacks=[callback],
         )
-    print("Evaluation of Model:\n{0}\n".format(model.evaluate(x_test, y_test, verbose=0)))
-    pd.DataFrame(train_history.history).plot(figsize=(8,5))
-    plt.show()
+    results = model.evaluate({"input_ids": x_test_token["input_ids"], "attention_mask": x_test_token["attention_mask"]}, y_test, verbose=1)    
+    print("Evaluation of Model:\n{0}\n".format(dict(zip(model.metrics_names, results))))
+    # pd.DataFrame(train_history.history).plot(figsize=(8,5))
+    # plt.show()
     model.save(file)
     print("Saved Model: {0}".format(file))
+    tf.keras.backend.clear_session()
+    del model
+    # return model
 
-    return model
+def import_model(file, transformer_model):
+    return tf.keras.models.load_model(file, custom_objects=transformer_model)
 
-
-def analyze_model(tokenizer, model, demo_tweets, demo_labels):
-    # model = tf.keras.models.load_model(file)
+def analyze_model(tokenizer, file, demo_tweets, demo_labels):
+    # model = tf.keras.models.load_model(file, custom_objects={"TFRobertaModel": TFRobertaModel})
+    model = import_model(file, {"TFBertModel": TFBertModel})
     demo_token = encode_data(tokenizer, demo_tweets)
 
     results = model.predict({"input_ids": demo_token["input_ids"], "attention_mask": demo_token["attention_mask"]})
@@ -153,34 +155,33 @@ def analyze_model(tokenizer, model, demo_tweets, demo_labels):
 
     print(classification_report(y_actual, y_predict))
 
-
-def predict_model(tokenizer, tweets, file = "BERT_Trained_Model.h5"):
-    model = tf.keras.models.load_model(file)
+def predict_model(tokenizer, tweets, file="./models/BERT_Trained_Model.h5"):
+    model = import_model(file, {"TFBertModel": TFBertModel})
     tweets_encoded = encode_data(tokenizer, tweets)
 
     results = model.predict({"input_ids": tweets_encoded["input_ids"], "attention_mask": tweets_encoded["attention_mask"]})
 
     return np.argmax(results, axis=1)
 
-
 def test_funcs():
     print("Test")
 
-    md_split = 100
-    tokenizer, bert = get_BertModel("roberta-base")
-    model_tweets, demo_tweets, model_labels, demo_labels = preprocess_data(md_split)
+    # tokenizer, bert = get_BertModel("roberta-base")
+    tokenizer, bert = get_BertModel("bert-base-cased")
+    model_tweets, demo_tweets, model_labels, demo_labels = preprocess_data()
 
-    print("Create_Model()")
-    model = create_model(tokenizer, bert, model_tweets, model_labels)
+    # print("Create_Model()")
+    # create_model(tokenizer, bert, model_tweets, model_labels)
 
     print("Analyze_Model()")
-    analyze_model(tokenizer, model, demo_tweets, demo_labels)
+    analyze_model(tokenizer, "./models/BERT_Trained_Model.h5", demo_tweets, demo_labels)
 
-    print("Predict_Model()")
-    results = predict_model(tokenizer, demo_tweets[1:5])
-    print(results)
+    # print("Predict_Model()")
+    # results = predict_model(tokenizer, demo_tweets[1:5])
+    # print(results)
 
 
 if __name__ == "__main__":
     tf.keras.backend.clear_session()
     test_funcs()
+    tf.keras.backend.clear_session()
