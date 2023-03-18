@@ -2,3 +2,4 @@
 Datasets/The Climate Change Twitter Dataset.csv.zip
 Datasets/Climate Change Twitter Dataset.csv
 .DS_Store
+*.h5
