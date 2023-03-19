@@ -48,7 +48,7 @@ def preprocess_data(file_name="../Dataset/Preprocessed_Data_Added_More.csv"):
     df = balance_data(df)
 
     model_tweets, demo_tweets, model_labels, demo_labels = train_test_split(
-        df["Tweet"].to_list(), df["stance_map"].to_list(), test_size=0.2, stratify=df["stance_map"].to_list()
+        df["Tweet"].to_list(), df["stance_map"].to_list(), test_size=0.02, stratify=df["stance_map"].to_list()
     )
 
     # Keras One-Hot Encoding Equilavent
@@ -170,12 +170,13 @@ def test_funcs():
     # tokenizer, bert = get_BertModel("roberta-base")
     tokenizer, bert = get_BertModel("bert-base-cased")
     model_tweets, demo_tweets, model_labels, demo_labels = preprocess_data()
+    print("Count - Model: {0} & Demo: {1}".format(len(model_tweets), len(demo_tweets)))
 
     # print("Create_Model()")
     # create_model(tokenizer, bert, model_tweets, model_labels)
 
-    # print("Analyze_Model()")
-    # analyze_model(tokenizer, "./models/BERT_Trained_Model.h5", demo_tweets, demo_labels)
+    print("Analyze_Model()")
+    analyze_model(tokenizer, "./models/BERT_Trained_Model.h5", demo_tweets, demo_labels)
 
     # print("Predict_Model()")
     # results = predict_model(tokenizer, demo_tweets[1:5])
@@ -186,3 +187,12 @@ if __name__ == "__main__":
     tf.keras.backend.clear_session()
     test_funcs()
     tf.keras.backend.clear_session()
+
+
+"""
+Batch Size: 16, Bert Uncased, Learning Rate 5E5
+{'loss': 0.5221635699272156, 'balanced_accuracy': 0.8054231405258179}
+
+Batch Size: 32, Bert Uncased, Learning Rate 5E5
+
+"""
