@@ -15,7 +15,7 @@ import pandas as pd
 from sklearn.model_selection import train_test_split
 from sklearn.metrics import classification_report
 from matplotlib import pyplot as plt
-from transformers import AutoTokenizer, TFBertModel, TFAutoModel
+from transformers import AutoTokenizer, TFBertModel, TFAutoModel, TFRobertaModel
 import tensorflow as tf
 
 # Caleb Panikulam
@@ -57,7 +57,7 @@ def preprocess_data(file_name="../Dataset/Preprocessed_Data_Added_More.csv"):
 
     return model_tweets, demo_tweets, model_labels, demo_labels
 
-def get_BertModel(model_name):
+def get_BertModel(model_name = ""):
     # tokenizer = AutoTokenizer.from_pretrained("bert-base-cased")
     # bert = TFBertModel.from_pretrained("bert-base-cased")
 
@@ -127,7 +127,7 @@ def create_model(tokenizer, bert, model_tweets, model_labels, max_length=70, fil
                 y_test,
             ),
             epochs=100,
-            batch_size=16,
+            batch_size=32,
             callbacks=[callback],
         )
     results = model.evaluate({"input_ids": x_test_token["input_ids"], "attention_mask": x_test_token["attention_mask"]}, y_test, verbose=1)    
@@ -167,8 +167,9 @@ def predict_model(tokenizer, tweets, file="./models/BERT_Trained_Model.h5"):
 def test_funcs():
     print("Test")
 
-    # tokenizer, bert = get_BertModel("roberta-base")
-    tokenizer, bert = get_BertModel("bert-base-cased")
+    #tokenizer, bert = get_BertModel("roberta-base")
+    # tokenizer, bert = get_BertModel("bert-base-cased")
+    tokenizer, bert = get_BertModel()
     model_tweets, demo_tweets, model_labels, demo_labels = preprocess_data()
     print("Count - Model: {0} & Demo: {1}".format(len(model_tweets), len(demo_tweets)))
 
@@ -192,7 +193,14 @@ if __name__ == "__main__":
 """
 Batch Size: 16, Bert Uncased, Learning Rate 5E5
 {'loss': 0.5221635699272156, 'balanced_accuracy': 0.8054231405258179}
+f1 score: 0.89 accuracy for 1028
 
 Batch Size: 32, Bert Uncased, Learning Rate 5E5
+{'loss': 0.5252397656440735, 'balanced_accuracy': 0.8102900385856628}
+f1 score: 0.90 accuracy for 1028
+
+Batch Size: 32, Roberta, Learning Rate 5E5
+{'loss': 0.5152681469917297, 'balanced_accuracy': 0.8009535074234009
+f1 score: 0.86 accuracy for 1028
 
 """
