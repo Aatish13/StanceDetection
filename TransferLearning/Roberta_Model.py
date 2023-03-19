@@ -8,6 +8,7 @@
 # https://stackoverflow.com/questions/73557769/valueerror-unknown-layer-tfbertmodel-please-ensure-this-object-is-passed-to-t
 # https://wandb.ai/ayush-thakur/dl-question-bank/reports/What-s-the-Optimal-Batch-Size-to-Train-a-Neural-Network---VmlldzoyMDkyNDU
 # https://datascience.stackexchange.com/questions/37186/early-stopping-on-validation-loss-or-on-accuracy
+# https://stackoverflow.com/questions/67715646/model-summary-and-plot-model-showing-nothing-from-the-built-model-in-tensorf
 
 import numpy as np
 import pandas as pd
@@ -40,7 +41,7 @@ def balance_data(df):
 
     return new_df
 
-def preprocess_data(file_name="../Dataset/Preprocessed_Data.csv"):
+def preprocess_data(file_name="../Dataset/Preprocessed_Data_Added_More.csv"):
     df = pd.read_csv(file_name)
     df["stance_map"] = df["stance"].map({"neutral": 0, "denier": 1, "believer": 2})
 
@@ -173,8 +174,8 @@ def test_funcs():
     # print("Create_Model()")
     # create_model(tokenizer, bert, model_tweets, model_labels)
 
-    print("Analyze_Model()")
-    analyze_model(tokenizer, "./models/BERT_Trained_Model.h5", demo_tweets, demo_labels)
+    # print("Analyze_Model()")
+    # analyze_model(tokenizer, "./models/BERT_Trained_Model.h5", demo_tweets, demo_labels)
 
     # print("Predict_Model()")
     # results = predict_model(tokenizer, demo_tweets[1:5])
