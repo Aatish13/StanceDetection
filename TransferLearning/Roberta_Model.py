@@ -148,8 +148,7 @@ def analyze_model(tokenizer, file, demo_tweets, demo_labels):
     model = import_model(file, {"TFBertModel": TFBertModel})
     demo_token = encode_data(tokenizer, demo_tweets)
 
-    results = model.predict({"input_ids": demo_token["input_ids"], "attention_mask": demo_token["attention_mask"]})
-    # print(predicted_raw[0])
+    results = model.predict({"input_ids": demo_token["input_ids"], "attention_mask": demo_token["attention_mask"]}, batch_size=int(len(demo_tweets)/20))
 
     y_predict = np.argmax(results, axis=1)
     y_actual = np.argmax(demo_labels, axis=1).tolist()
@@ -160,7 +159,13 @@ def predict_model(tokenizer, tweets, file="./models/BERT_Trained_Model.h5"):
     model = import_model(file, {"TFBertModel": TFBertModel})
     tweets_encoded = encode_data(tokenizer, tweets)
 
-    results = model.predict({"input_ids": tweets_encoded["input_ids"], "attention_mask": tweets_encoded["attention_mask"]})
+    results = model.predict({"input_ids": tweets_encoded["input_ids"], "attention_mask": tweets_encoded["attention_mask"]}, batch_size=int(len(tweets)/20))
+    # Note: Argmax gets the index were the max is and max gets the max of the list. Axis = 1 means it do the comparision row wise not column wire
+    df_conf_all = pd.DataFrame({"Label": np.argmax(results, axis=1).tolist() , "Confidence Sum": np.max(results, axis=1).tolist()})
+    
+    df_conf = df_conf_all.groupby("Label").sum().reset_index()[["Label", "Confidence Sum"]]
+    df_conf["Confidence Score"] = df_conf["Confidence Sum"] / df_conf_all["Confidence Sum"].sum()
+    print(df_conf[["Label", "Confidence Score"]])
 
     return np.argmax(results, axis=1)
 
@@ -176,12 +181,12 @@ def test_funcs():
     # print("Create_Model()")
     # create_model(tokenizer, bert, model_tweets, model_labels)
 
-    print("Analyze_Model()")
-    analyze_model(tokenizer, "./models/BERT_Trained_Model.h5", demo_tweets, demo_labels)
+    # print("Analyze_Model()")
+    # analyze_model(tokenizer, "./models/BERT_Trained_Model.h5", demo_tweets, demo_labels)
 
-    # print("Predict_Model()")
-    # results = predict_model(tokenizer, demo_tweets[1:5])
-    # print(results)
+    print("Predict_Model()")
+    results = predict_model(tokenizer, demo_tweets[0:5])
+    print(results)
 
 
 if __name__ == "__main__":
