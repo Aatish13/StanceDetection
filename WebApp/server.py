@@ -1,4 +1,4 @@
-from flask import Flask, request
+from flask import Flask, request,render_template
 from PIL import Image
 import base64
 import os
@@ -10,11 +10,14 @@ import pandas as pd
 import tensorflow as tf
 from transformers import BertTokenizer
 
-model = tf.keras.models.load_model('./BERT_Trained_Model.h5')
+model = tf.keras.models.load_model('./WebApp/BERT_Trained_Model.h5')
 tokenizer = BertTokenizer.from_pretrained('bert-base-uncased')
 
 app = Flask(__name__)
 
+@app.route('/')
+def index():
+    return render_template('/views/index.html')
 
 @app.route("/predict/", methods=["POST"])
 def predict():
