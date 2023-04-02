@@ -10,21 +10,21 @@ import pandas as pd
 import tensorflow as tf
 from transformers import BertTokenizer, TFBertModel
 
-model = tf.keras.models.load_model('./WebApp/BERT_Trained_Model.h5', custom_objects={"TFBertModel": TFBertModel})
+model = tf.keras.models.load_model('./BERT_Trained_Model.h5', custom_objects={"TFBertModel": TFBertModel})
 tokenizer = BertTokenizer.from_pretrained('bert-base-uncased')
 
 app = Flask(__name__)
 
 @app.route('/')
 def index():
-    return render_template('/views/index.html')
+    return render_template('index.html')
 
-@app.route("/predict/", methods=["POST"])
+@app.route("/predict", methods=["POST"])
 def predict():
 
     file = request.files['file']
     df = pd.read_csv(file)
-
+    print(df)
     encoded_texts = tokenizer.batch_encode_plus(
         df['text'].values,
         add_special_tokens=True,
