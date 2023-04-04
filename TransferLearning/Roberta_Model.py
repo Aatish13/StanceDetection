@@ -178,15 +178,19 @@ def test_funcs():
     model_tweets, demo_tweets, model_labels, demo_labels = preprocess_data()
     print("Count - Model: {0} & Demo: {1}".format(len(model_tweets), len(demo_tweets)))
 
+    # print("Export Demo results")
+    # demo_df = pd.DataFrame({"Tweets": demo_tweets, "Label": np.argmax(demo_labels, axis=1)})
+    # demo_df.to_csv("./demo_tweets.csv")
+
     # print("Create_Model()")
     # create_model(tokenizer, bert, model_tweets, model_labels)
 
     # print("Analyze_Model()")
     # analyze_model(tokenizer, "./models/BERT_Trained_Model.h5", demo_tweets, demo_labels)
 
-    print("Predict_Model()")
-    results = predict_model(tokenizer, demo_tweets[0:5])
-    print(results)
+    # print("Predict_Model()")
+    # results = predict_model(tokenizer, demo_tweets[0:5])
+    # print(results)
 
 
 if __name__ == "__main__":
