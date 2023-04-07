@@ -22,21 +22,40 @@ def index():
 @app.route("/predict", methods=["POST"])
 def predict():
 
+    # Read uploaded file
     file = request.files['file']
     df = pd.read_csv(file)
     print(df)
-    encoded_texts = tokenizer.batch_encode_plus(
-        df['text'].values,
+
+    # Encode Text for the Model
+    encoded_texts = tokenizer(
+        text=df['Tweets'].values.tolist(),
         add_special_tokens=True,
+        max_length=70,
+        truncation=True,
+        # padding=True,
+        padding="max_length",
+        return_tensors="tf",
+        return_token_type_ids=False,
         return_attention_mask=True,
-        pad_to_max_length=True,
-        max_length=128,
-        return_tensors='tf'
+        verbose=True,
     )
 
-    predictions = model.predict(encoded_texts['input_ids'])
+    # Run the Prediction
+    results = model.predict({"input_ids": encoded_texts["input_ids"], "attention_mask": encoded_texts["attention_mask"]}, batch_size=int(len(df['Tweets'].values)/20))
+    print(results)
+    
+    # Convert the Prediction to Labels via the max index of each row
+    print(np.argmax(results, axis=1))
 
-    return {'predictions': predictions.tolist()}
+    # Produce Confidence Score
+    df_conf_all = pd.DataFrame({"Label": np.argmax(results, axis=1).tolist() , "Confidence Sum": np.max(results, axis=1).tolist()})
+    df_conf = df_conf_all.groupby("Label").sum().reset_index()[["Label", "Confidence Sum"]]
+    df_conf["Confidence Score"] = df_conf["Confidence Sum"] / df_conf_all["Confidence Sum"].sum()
+    print(df_conf[["Label", "Confidence Score"]])
+
+
+    return {'predictions': np.argmax(results, axis=1)}#predictions.tolist()}
 
     # data = request.form
     # file_name = str(datetime.datetime.now())
@@ -90,4 +109,4 @@ def predict():
 
 
 if __name__ == "__main__":
-    app.run("0.0.0.0", port=3000)
+    app.run("0.0.0.0", port=3000, debug=True)
