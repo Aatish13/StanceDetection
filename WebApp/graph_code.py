@@ -1,4 +1,11 @@
+import numpy as np
 import pandas as pd
+import tensorflow as tf
+from transformers import BertTokenizer, TFBertModel
+
+model = tf.keras.models.load_model('./BERT_Trained_Model.h5', custom_objects={"TFBertModel": TFBertModel})
+tokenizer = BertTokenizer.from_pretrained('bert-base-uncased')
+
 from sklearn.metrics import multilabel_confusion_matrix
 
 
@@ -23,11 +30,11 @@ def get_prediction(df):
 
 # https://scikit-learn.org/stable/modules/generated/sklearn.metrics.multilabel_confusion_matrix.html
 # https://scikit-learn.org/stable/modules/generated/sklearn.metrics.ConfusionMatrixDisplay.html
+# Copied from: https://stackoverflow.com/questions/67303001/plot-confusion-matrix-with-keras-data-generator-using-sklearn
 def get_confusionMatrix(expected, predictions):
-    confusion_matrixes = multilabel_confusion_matrix(expected, predictions)
-    for confusion_matrix in confusion_matrixes:
-        ConfusionMatrixDisplay(confusion_matrix=confusion_matrix, display_labels=clf.classes_).plot()
-    return confusion_matrixes
+    disp = ConfusionMatrixDisplay(confusion_matrix=confusion_matrix(expected, predictions), display_labels=["Non-Believer: 0", "Neutral: 1", "Believer: 2"])
+    disp.plot(cmap=plt.cm.Blues)
+    plt.show()
 
 # https://stackoverflow.com/questions/56870373/getting-the-accuracy-from-classification-report-back-into-a-list
 def get_skLearnEvaluation(expected, predictions):
@@ -55,7 +62,7 @@ def get_skLearnEvaluation(expected, predictions):
     'support': 3}}
     """
 
-df = pd.read_csv(r"./TransferLearning/demo_tweets.csv")
+df = pd.read_csv(r"../TransferLearning/demo_tweets.csv")
 predictions = get_prediction(df)
 expected = df["Label"].values.tolist()
 get_confusionMatrix(expected, predictions)
