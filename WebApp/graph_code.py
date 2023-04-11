@@ -70,20 +70,14 @@ def get_skLearnEvaluation(expected, predictions):
     'f1-score': 0.6666666666666666,
     'support': 3}}
     """
-
-def model_trainVtestgraph():
-    # pd.DataFrame(model.history).plot(figsize=(8,5))
-    # plt.show()
-    print(pd.DataFrame.from_dict(model.history))
     
 
-# df = pd.read_csv(r"../TransferLearning/demo_tweets.csv")
-# predictions = get_prediction(df)
-# expected = df["Label"].values.tolist()
+df = pd.read_csv(r"../TransferLearning/demo_tweets.csv")
+predictions = get_prediction(df)
+expected = df["Label"].values.tolist()
 # get_confusionMatrix(expected, predictions)
-# get_skLearnEvaluation(expected, predictions)
+get_skLearnEvaluation(expected, predictions)
 # Note: For the training, focused on val_balanced_accuracy
-model_trainVtestgraph()
 
 # ==================================
 #  Prediction
