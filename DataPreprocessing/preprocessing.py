@@ -5,7 +5,6 @@ def balance_data(df):
     df_believer = df[df["stance"]=='believer']
     df_denier = df[df["stance"]=='denier']
     df_neutral = df[df["stance"]=='neutral']
-    df_balanced = pd.DataFrame()
     min_count = min(len(df_neutral), len(df_believer), len(df_denier))
     return pd.concat([df_believer.sample(min_count), df_denier.sample(min_count), df_neutral.sample(min_count)])
 
