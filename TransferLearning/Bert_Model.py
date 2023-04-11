@@ -132,10 +132,10 @@ def create_model(tokenizer, bert, model_tweets, model_labels, max_length=70, fil
         )
     results = model.evaluate({"input_ids": x_test_token["input_ids"], "attention_mask": x_test_token["attention_mask"]}, y_test, verbose=1)    
     print("Evaluation of Model:\n{0}\n".format(dict(zip(model.metrics_names, results))))
-    # pd.DataFrame(train_history.history).plot(figsize=(8,5))
-    # plt.show()
-    model.save(file)
-    print("Saved Model: {0}".format(file))
+    pd.DataFrame(train_history.history).plot(figsize=(8,5))
+    plt.show()
+    # model.save(file)
+    # print("Saved Model: {0}".format(file))
     tf.keras.backend.clear_session()
     del model
     # return model
@@ -182,8 +182,8 @@ def test_funcs():
     # demo_df = pd.DataFrame({"Tweets": demo_tweets, "Label": np.argmax(demo_labels, axis=1)})
     # demo_df.to_csv("./demo_tweets.csv")
 
-    # print("Create_Model()")
-    # create_model(tokenizer, bert, model_tweets, model_labels)
+    print("Create_Model()")
+    create_model(tokenizer, bert, model_tweets, model_labels)
 
     # print("Analyze_Model()")
     # analyze_model(tokenizer, "./models/BERT_Trained_Model.h5", demo_tweets, demo_labels)

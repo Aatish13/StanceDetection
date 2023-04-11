@@ -1,4 +1,13 @@
+import numpy as np
 import pandas as pd
+import tensorflow as tf
+from transformers import BertTokenizer, TFBertModel
+from sklearn.metrics import confusion_matrix, ConfusionMatrixDisplay, classification_report
+import matplotlib.pyplot as plt
+
+model = tf.keras.models.load_model('./models/BERT_Trained_Model.h5', custom_objects={"TFBertModel": TFBertModel})
+tokenizer = BertTokenizer.from_pretrained('bert-base-uncased')
+
 from sklearn.metrics import multilabel_confusion_matrix
 
 
@@ -23,14 +32,21 @@ def get_prediction(df):
 
 # https://scikit-learn.org/stable/modules/generated/sklearn.metrics.multilabel_confusion_matrix.html
 # https://scikit-learn.org/stable/modules/generated/sklearn.metrics.ConfusionMatrixDisplay.html
+# Copied from: https://stackoverflow.com/questions/67303001/plot-confusion-matrix-with-keras-data-generator-using-sklearn
 def get_confusionMatrix(expected, predictions):
-    confusion_matrixes = multilabel_confusion_matrix(expected, predictions)
-    for confusion_matrix in confusion_matrixes:
-        ConfusionMatrixDisplay(confusion_matrix=confusion_matrix, display_labels=clf.classes_).plot()
-    return confusion_matrixes
+    # disp = ConfusionMatrixDisplay(confusion_matrix=confusion_matrix(expected, predictions), display_labels=["Non-Believer: 0", "Neutral: 1", "Believer: 2"])
+    disp = ConfusionMatrixDisplay(confusion_matrix=confusion_matrix(expected, predictions, normalize="all"), display_labels=["Non-Believer: 0", "Neutral: 1", "Believer: 2"])
+    disp.plot(cmap=plt.cm.Blues)
+    plt.show()
 
 # https://stackoverflow.com/questions/56870373/getting-the-accuracy-from-classification-report-back-into-a-list
 def get_skLearnEvaluation(expected, predictions):
+    # print(classification_report(expected, predictions))
+    result = classification_report(expected, predictions, output_dict=True)
+    # print(result)
+    for i in range(0, 3):
+        print("F1 Score for Label {0}: {1}".format(i, result[str(i)]["f1-score"]*100))
+    print("Model Accuracy: {0}".format(result["accuracy"]*100))
     return classification_report(expected, predictions, output_dict=True)
     """
     Example Output:
@@ -54,11 +70,14 @@ def get_skLearnEvaluation(expected, predictions):
     'f1-score': 0.6666666666666666,
     'support': 3}}
     """
+    
 
-df = pd.read_csv(r"./TransferLearning/demo_tweets.csv")
+df = pd.read_csv(r"../TransferLearning/demo_tweets.csv")
 predictions = get_prediction(df)
 expected = df["Label"].values.tolist()
-get_confusionMatrix(expected, predictions)
+# get_confusionMatrix(expected, predictions)
+get_skLearnEvaluation(expected, predictions)
+# Note: For the training, focused on val_balanced_accuracy
 
 # ==================================
 #  Prediction
@@ -86,5 +105,3 @@ def get_confidence_score(results):
     new_df["Confidence Text"] = new_df["Confidence Text"].apply(score2Txt)
     # Progress Bar is score rounded to percentage 0.3513 => 35%
     return new_df
-
-# Tensorflow Training vs Testing graph saved as model_results_plot.png
