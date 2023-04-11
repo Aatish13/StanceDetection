@@ -71,7 +71,14 @@ def get_skLearnEvaluation(expected, predictions):
     'support': 3}}
     """
     
-tf.keras.vis_utils.plot_model(model, show_shapes=True, show_layer_names=True)
+tf.keras.utils.plot_model(model, show_shapes=True, show_layer_names=True)
+# For feature reference 
+"""
+conda install graphviz
+conda install pydot
+conda install pydotplus
+"""
+
 # df = pd.read_csv(r"../TransferLearning/demo_tweets.csv")
 # predictions = get_prediction(df)
 # expected = df["Label"].values.tolist()
