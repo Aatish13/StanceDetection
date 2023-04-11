@@ -10,7 +10,7 @@ import pandas as pd
 import tensorflow as tf
 from transformers import BertTokenizer, TFBertModel
 
-model = tf.keras.models.load_model('./BERT_Trained_Model.h5', custom_objects={"TFBertModel": TFBertModel})
+model = tf.keras.models.load_model('./models/BERT_Trained_Model.h5', custom_objects={"TFBertModel": TFBertModel})
 tokenizer = BertTokenizer.from_pretrained('bert-base-uncased')
 
 app = Flask(__name__)
