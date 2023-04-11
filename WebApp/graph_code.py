@@ -71,12 +71,12 @@ def get_skLearnEvaluation(expected, predictions):
     'support': 3}}
     """
     
-
-df = pd.read_csv(r"../TransferLearning/demo_tweets.csv")
-predictions = get_prediction(df)
-expected = df["Label"].values.tolist()
+tf.keras.vis_utils.plot_model(model, show_shapes=True, show_layer_names=True)
+# df = pd.read_csv(r"../TransferLearning/demo_tweets.csv")
+# predictions = get_prediction(df)
+# expected = df["Label"].values.tolist()
 # get_confusionMatrix(expected, predictions)
-get_skLearnEvaluation(expected, predictions)
+# get_skLearnEvaluation(expected, predictions)
 # Note: For the training, focused on val_balanced_accuracy
 
 # ==================================
