@@ -72,7 +72,7 @@ def get_skLearnEvaluation(expected, predictions):
     """
     
 tf.keras.utils.plot_model(model, show_shapes=True, show_layer_names=True)
-oyth# For feature reference 
+# For feature reference 
 """
 conda install graphviz
 conda install pydot
