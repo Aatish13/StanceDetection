@@ -43,7 +43,7 @@ def balance_data(df):
 
 def preprocess_data(file_name="../Dataset/Preprocessed_Data_Added_More.csv"):
     df = pd.read_csv(file_name)
-    df["stance_map"] = df["stance"].map({"neutral": 0, "denier": 1, "believer": 2})
+    df["stance_map"] = df["stance"].map({"denier":0, "believer": 1, "neutral": 2})
 
     df = balance_data(df)
 
